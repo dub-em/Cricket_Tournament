@@ -6,3 +6,6 @@
 
 #### Starting Command
 ```streamlit run app.py```
+
+#### Link to Loom Video Brief Explanation of the Assignment Solution
++ https://www.loom.com/share/061f8d0a45924fe2aee9e0321cfa8a82?sid=204f7d19-0b14-4839-97b5-53046097e1fa
