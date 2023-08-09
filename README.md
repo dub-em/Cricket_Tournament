@@ -1,5 +1,5 @@
-# PDF Table Reader 
+# Cricket Tournament SImulator 
 
 ### Purpose of this Project 
-+ The project is aimed at implementing a pdf table reader, which parses a pdf file and extracts the tables within this file. The contents of the extracted table are then transformed using embeddings of open-source LLMs and then loaded unto a Vector Store.
-+ Streamlit was used for the interactive front-end of this project, Weaviate was used for creating the Vector Store, but any other suitable clud platform can still be used. OpenAI was used for the embedding part of this app.
++ This is a brief project which simulates an entire cricket tournament with multiple teams while making use of the fundamental principle of OOP (Object Oriented Programming).
++ Streamlit was used for the front-end of this project, while other in-built python module (like random etc.) were used in combination with the fundamental concepts of object oriented programming to construct the logic behind the simulation.
