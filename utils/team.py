@@ -27,9 +27,6 @@ class team():
             name = "player"+str(i)
             self.players[str(i)] = player(name, self.name)
             self.players[str(i)].original_val()
-            
-    #def team_postion(self, position):
-    #    self.position = position
     
     def overs_status(self):
         '''Demarcate the players by the remaining overs per player.'''
@@ -78,7 +75,7 @@ class team():
             index_1 = temp_list_1.index(prev_bowler)
             pop_mssg = temp_list_1.pop(index_1)
             
-        weight = [player.bowling for player in temp_list_1]
+        weight = [player.bowling for player in temp_list_1] #Weight of players bowling skill is used to make a choice
         
         bowler = random.choices(temp_list_1, weights=weight, k=1)
         bowler = bowler[0]
@@ -91,6 +88,7 @@ class team():
         bowler.calc_coordinate()
         bowler.field_role = "bowler"
         
+        #After bowler is selected, the rest of the players are disributed across the fields with respect to the current play formation.
         for i in range(len(temp_list_2)):
             if (int(i) <= inner_maxplayers) & (inner_players != 0):
                 if int(i) == inner_maxplayers:
@@ -129,7 +127,7 @@ class team():
             for i in range(2):
                 weight = []
                 for player in self.bat_next_down:
-                    weight.append(player.batting)
+                    weight.append(player.batting) #Players' batting skill are used to determine who the next batter will be.
                 if i == 0:
                     batter = random.choices(self.bat_next_down, weights=weight, k=1)
                     batter = batter[0]
@@ -155,6 +153,7 @@ class team():
                     runner.bat_ypos = pitch.southwicket_ypos
                     self.bat_active_players.append(runner)
         else:
+            #If the game is already on going and only one player is needed for substitution.
             weight = []
             category = self.bat_active_players[0].batting_position
             for player in self.bat_next_down:
@@ -163,7 +162,7 @@ class team():
             sub = sub[0]
             index = self.bat_next_down.index(sub)
             pop_mssg = self.bat_next_down.pop(index)
-            if category == 'batter':
+            if category == 'batter': #The status of that player chosen for substitution is dependend on the status of the player remaining on the field.
                 sub.batting_status = 'active'
                 sub.batting_position = 'runner'
                 sub.bat_angularpos = pitch.southwicket_angularpos
@@ -201,8 +200,8 @@ class team():
         
                 
     def bat_retiredhurt(self, player):
-        '''When a player from the batting team is retired hurt, this function
-        removes them from the active list and places them in the retired hurt
+        '''When a player from the batting team is caught out or affected by a run out, 
+        this function removes them from the active list and places them in the retired hurt
         list'''
         player = player
         index = self.bat_active_players.index(player)

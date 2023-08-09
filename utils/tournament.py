@@ -39,13 +39,13 @@ class tournament():
         next stage of matches'''
         self.updated_groups = {}
         number_of_groups = len(self.winning_teams.keys())/2
-        if number_of_groups >= 1:
+        if number_of_groups >= 1: #This determines if the number of remaining teams is enough for a group
             for i in range(int(number_of_groups)):
                 self.updated_groups[str(i)] = []
             for i in self.winning_teams.keys():
                 group = int(i)//2
                 self.updated_groups[str(group)].append(self.winning_teams[i])
-            return "Tournament Ongoing"
+            return "Tournament Ongoing" #If team are enough then tournament continues
         else:
-            return "Tournament Completed"
+            return "Tournament Completed" #Else, tournament is concluded.
           

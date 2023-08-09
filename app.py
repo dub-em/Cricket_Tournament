@@ -10,10 +10,11 @@ from utils.tournament import tournament
 from utils.umpire import umpire
 from utils import extra
  
+#Imports image for the sidebar
 tournament_header = Image.open('./images/Tournament_Header.jpg')
 tournament_header = tournament_header.resize((300, 150))
 
-# Sidebar contents
+#Sidebar contents
 with st.sidebar: 
     st.sidebar.image(tournament_header)
     st.title('Cricket Tournament Simulator')
@@ -33,6 +34,7 @@ def main():
 
     st.header("Cricket World Tournament")
 
+    #Imports pictures which will be used later to add context/sentiment to the match updates.
     tournament_winner = Image.open('./images/Tournament_Winners.jpg')
     tournament_winner = tournament_winner.resize((400, 200))
     match_winners_1 = Image.open('./images/Match_Winners_1.jpg')
@@ -64,9 +66,11 @@ def main():
     #Group team using grouping function
     new_tournament.team_grouping()
 
+    #Initiates the state of the Tournament
     tournament_status = "Tournament Ongoing"
     level = 1
 
+    #While loop keeps running until there are no more groups matches to be had.
     while tournament_status == "Tournament Ongoing":
         for group_number in new_tournament.updated_groups.keys():
             current_group = new_tournament.updated_groups[group_number]
@@ -84,10 +88,11 @@ def main():
             #The two halves of the match is iterated through
             for i in range(2):
                 #Match Preambles and Preparations
-                playtype_overcount = 0
-                player_overcount = 0
-                orig_playtype = 'power_play'
-                batting_team_score = 0
+
+                orig_playtype = 'power_play' #Fielding teams starts with a power play formation
+                playtype_overcount = 0 #Determing the number of overs before the field team play formation is changed.
+                player_overcount = 0 #Determing the number of overs before a pitcher is changed
+                batting_team_score = 0 #Batting team's score is initiated
 
                 #Batting team fill their bench with all players for a start
                 batting_team.bat_fillbench()
@@ -98,7 +103,7 @@ def main():
                 #Records the overs balance of each player in the fielding team
                 fielding_team.overs_status()
 
-                #Distributs the player in the fielding team according to the type of play.
+                #Distributes the player in the fielding team according to the type of play.
                 fielding_team.team_fielddistribution(new_pitch, orig_playtype)
 
                 #Current Pitcher is identitfied
@@ -125,10 +130,12 @@ def main():
                     if batter_hits_prob >= ball_thrown:
                         #If the ball is hit what happens
 
+                        #Position of every fielder is determined for later use
                         field_players = [fielding_team.players[i] for i in fielding_team.players.keys()]
                         balltoplayer_dist = []
-                        ball_angle = random.uniform(0.0, 360.0)
+                        ball_angle = random.uniform(0.0, 360.0) #ball angle is randomly generated
 
+                        #ball distance across the pitch is a function of the batter and pitchers skills
                         ball_dist_perc = ((ball_thrown+batter_hits_prob)/2)+random.uniform(0.0,0.3)
 
                         if ball_dist_perc >= 1.0:
@@ -153,27 +160,32 @@ def main():
                             min_dist = min(balltoplayer_dist)
                             index = balltoplayer_dist.index(min_dist)
 
+                            #The closest player to the ball is the deciding player
                             deciding_player = field_players[index]
-                            #Probability of player catching ball is calculated using the closest player
+
+                            #Probability of player catching ball is calculated using the deciding player
                             catch_prob = random.uniform(deciding_player.fielding+0.15,1.0)
 
-
                             if catch_prob >= batter_hits_prob:
-                                #If player catches the ball, probability of catch out is calculated
-                                deciding_player.fielding_fatigue()
-                                ball_caught = 'true'
+                                #Deciding player catches the ball, then...
+                                #Probability of catch out is calculated
+                                deciding_player.fielding_fatigue() #Fatigue function which reduces players skill per activity on the field
 
                                 catchout_prob = random.uniform(deciding_player.fielding, 1.0)
 
                                 if catchout_prob >= batter_hits_prob:
+                                    #Player catches ball without bounce
 
+                                    #Batting player has been caught out and will be substituted by a next down
                                     for players in batting_team.bat_active_players:
                                         if players.batting_position == "batter":
                                             batting_team.bat_retiredhurt(players)
 
+                                    #Points updated
                                     points = 0
                                     batting_team_score += points
 
+                                    #If the list of next down players is empty then the current half is concluded.
                                     if len(batting_team.bat_next_down) == 0:
                                         if (i+1) == 1:
                                             commentator = 'First half of Match {}, Group Level {} is concluded!'.format(group_number, str(level))
@@ -183,10 +195,13 @@ def main():
                                             st.write(f'{commentator}')
                                         time.sleep(1)
                                         break
+
+                                    #If the next down list is still populated, caught out player is substituted
                                     batting_team.bat_playerselect('game_ongoing', new_pitch)
 
                                 else:
-                                    #fielder throws the ball back to the wickets
+                                    #If there is no catch out...
+                                    #fielder (deciding player) throws the ball back to the wickets
                                     balltowicket_dist = []
 
                                     #Distance ball needs to travel to both wickets are calculated
@@ -199,17 +214,17 @@ def main():
                                     targetwicket_dist = min(balltowicket_dist)
 
                                     #Distance to the closest wicket is used to compute number of runs achieved by the batter and runner
-                                    numberofruns_achieved = targetwicket_dist//new_pitch.pitch_length
+                                    numberofruns_achieved = targetwicket_dist//new_pitch.pitch_length #distance of ball to wicket divided by pitch distance
 
+                                    #Both batter and runner experience running fatigue due to running activity
                                     for players in batting_team.bat_active_players:
                                         players.running_fatigue()
 
-                                    #Distance away from crease is calculated to decided on whether it is a runout or not.
+                                    #Distance away from crease is calculated to decided on whether it is a runout or not when ball reaches the wicket.
                                     dist_fromcrease = math.modf(targetwicket_dist/new_pitch.pitch_length)[0]
 
                                     if dist_fromcrease <= 0.30:
                                         #Batting players' distance away from crease is insignificant, so no runout.
-                                        runout = 'false'
                                         points = numberofruns_achieved
                                         batting_team_score += points
                                     else:
@@ -218,6 +233,7 @@ def main():
                                             #Number of runs are odd, hence the batter and runner have a role change.
                                             batting_team.bat_positionflip(new_pitch)
 
+                                        #The player closest to the wicket being target is calculated.
                                         balltobatteam_dist = [math.sqrt((ball_xpos - players.bat_xpos)**2 + (ball_ypos - players.bat_xpos)**2) 
                                                               for players in batting_team.bat_active_players]
                                         targetplayer_dist = min(balltobatteam_dist)
@@ -225,10 +241,11 @@ def main():
 
                                         #The player whose wicket is targeted is affected by the runout
                                         players = batting_team.bat_active_players[index]
-                                        batting_team.bat_retiredhurt(players) #Player is retired hurt
+                                        batting_team.bat_retiredhurt(players) #Player is then removed from pitch
                                         points = numberofruns_achieved
-                                        batting_team_score += points
+                                        batting_team_score += points #Batting team scores are updated
 
+                                        #If the list of next down players is empty then the current half is concluded.
                                         if len(batting_team.bat_next_down) == 0:
                                             if (i+1) == 1:
                                                 commentator = 'First half of Match {}, Group Level {} is concluded!'.format(group_number, str(level))
@@ -240,12 +257,12 @@ def main():
                                             break
                                         batting_team.bat_playerselect('game_ongoing', new_pitch)
                             else:
-                                #If player doesn't catch the ball then the ball rolls out of boundary
-                                ball_caught = 'false'
+                                #If deciding player doesn't catch the ball at the given speed, then the ball rolls out of boundary
                                 points = 4
-                                batting_team_score += points
+                                batting_team_score += points #Batting teams score is updated.
                         else:
-                            #If ball force is low, then batter and runner decide not to run, however...
+                            #If ball force is low, then batter and runner decide not to run which means no run out, however...
+                            #there can still be a catch-out which is calculated for.
                             ball_raddist = ball_dist_perc * new_pitch.outer_radius
                             ball_xpos = math.sin(math.radians(ball_angle))*ball_raddist
                             ball_ypos = math.cos(math.radians(ball_angle))*ball_raddist
@@ -256,20 +273,23 @@ def main():
                             min_dist = min(balltoplayer_dist)
                             index = balltoplayer_dist.index(min_dist)
 
-                            #catch out probability is calculated based on closest player to the ball
+                            #catch out probability is calculated based on closest player (deciding player) to the ball
                             deciding_player = field_players[index]
                             deciding_player.fielding_fatigue()
 
                             catchout_prob = random.uniform(deciding_player.fielding, 1.0)
 
                             if catchout_prob >= batter_hits_prob:
+                                #The is a catch out, and current batter is removed
                                 for players in batting_team.bat_active_players:
                                         if players.batting_position == "batter":
                                             batting_team.bat_retiredhurt(players)
 
+                                #Batting team points are updated
                                 points = 0
                                 batting_team_score += points
 
+                                #If the list of next down players is empty then the current half is concluded.
                                 if len(batting_team.bat_next_down) == 0:
                                     if (i+1) == 1:
                                         commentator = 'First half of Match {}, Group Level {} is concluded!'.format(group_number, str(level))
@@ -279,29 +299,30 @@ def main():
                                         st.write(f'{commentator}')
                                     time.sleep(1)
                                     break
+                                
+                                #If the next down list is still populated then the removed player is substituted.
                                 batting_team.bat_playerselect('game_ongoing', new_pitch)
                             else:
                                 #If no catch out then dot ball.
-                                dot_ball = 'true'
                                 points = 0
-                                batting_team_score += points    
+                                batting_team_score += points #Batting team score is updated.   
                     else:
                         #If the ball isn't hit, what happens
-                        batter_hits = "false"
 
                         #Wicket Keeper attempts to catch the ball
                         ball_caught = random.uniform((wicketkeeper.fielding+0.2),1.0)
                         if ball_caught >= ball_thrown:
-                            dot_ball = "true"
+                            #If wicket keeper catches the ball without contact with batter, then dot ball
                             wicketkeeper.fielding_fatigue()
                             points = 0
-                            batting_team_score += points
+                            batting_team_score += points #Batting team points are updated accordingly
                         else:
+                            #If wicket keeper missed the ball as well, then batter and runner can decide to run
                             #runout process above is repeated
                             field_players = [fielding_team.players[i] for i in fielding_team.players.keys()]
                             balltoplayer_dist = []
                             ball_angle = 0.0
-                            ball_dist_perc = (ball_thrown/2)+random.uniform(0.0,0.5)
+                            ball_dist_perc = (ball_thrown/2)+random.uniform(0.0,0.5) #ball speed/distance across the field is calculated
                             if (ball_dist_perc >= 0.9) & (ball_dist_perc <= 1.0):
                                 #Ball goes out of boundary
                                 points = 4
@@ -318,8 +339,8 @@ def main():
                                 min_dist = min(balltoplayer_dist)
                                 index = balltoplayer_dist.index(min_dist)
 
-                                deciding_player = field_players[index]
-                                #Probability of player catching ball is calculated using the closest player
+                                deciding_player = field_players[index] #Closes player to the ball
+                                #Probability of player catching ball is calculated using the closest player (deciding player)
                                 catch_prob = random.uniform(deciding_player.fielding+0.15,1.0)
 
                                 if catch_prob >= ball_thrown:
@@ -338,6 +359,7 @@ def main():
                                     #Distance to the closest wicket is used to compute number of runs achieved by the batter and runner
                                     numberofruns_achieved = targetwicket_dist//new_pitch.pitch_length
 
+                                    #Deciding player (fielder) and the runners both experience fatigue from field activity
                                     deciding_player.fielding_fatigue()
                                     for players in batting_team.bat_active_players:
                                         players.running_fatigue()
@@ -363,10 +385,11 @@ def main():
 
                                         #The player whose wicket is targeted is affected by the runout
                                         players = batting_team.bat_active_players[index]
-                                        batting_team.bat_retiredhurt(players) #Player is retired hurt
+                                        batting_team.bat_retiredhurt(players) #Player is removed from the field to eb substituted
                                         points = numberofruns_achieved
                                         batting_team_score += points
 
+                                        #If the list of next down players is empty then the current half is concluded.
                                         if len(batting_team.bat_next_down) == 0:
                                             if (i+1) == 1:
                                                 commentator = 'First half of Match {}, Group Level {} is concluded!'.format(group_number, str(level))
@@ -376,27 +399,29 @@ def main():
                                                 st.write(f'{commentator}')
                                             time.sleep(1)
                                             break
+                                        
+                                        #If there are more player on the next down list, then a substitution is made for the removed player
                                         batting_team.bat_playerselect('game_ongoing', new_pitch)
                                 else:
-                                    #If player doesn't catch the ball then the ball rolls out of boundary
+                                    #If player doesn't catch the ball at the current speed then the ball rolls out of boundary
                                     ball_caught = 'false'
                                     points = 4
                                     batting_team_score += points
                             else:
-                                #If ball force is low, then batter and runner decide not to run
+                                #If ball force is low, then batter and runner decide not to run and the ball is a dot ball
                                 points = 0
-                                batting_team_score += points
+                                batting_team_score += points #Batting team points are updated accordingly
 
                     #This determine the current player formation of the fielding team and if a redistribution is needed
                     playtype_overcount += 1
-                    if playtype_overcount <= 36:
+                    if playtype_overcount <= 36: #6 overs at the beginning of the half
                         playtype = 'power_play'
-                    elif (playtype_overcount > 36) & (playtype_overcount <=96):
+                    elif (playtype_overcount > 36) & (playtype_overcount <=96): #10 overs in between
                         playtype = 'normal_play'
-                    else:
+                    else: #The remaining 4 overs at the end of the half
                         playtype = 'power_play'
 
-                    if orig_playtype != playtype:
+                    if orig_playtype != playtype: #If playtype changes the fielding team redistribution is carried out.
                         fielding_team.team_fielddistribution(new_pitch, playtype)
                         orig_playtype = playtype
 
@@ -408,24 +433,22 @@ def main():
 
                     #This determines if the bowler will be changed after one over 1 is exhausted, and subsequently causes a team redistribution
                     player_overcount += 1
-                    if player_overcount == 6:
+                    if player_overcount == 6: #One over is exhausted and the bowler has to be changed
                         pitcher.over_deplete()
-                        fielding_team.overs_status()
+                        fielding_team.overs_status() #Selects players only from player with total remaining overs not exhausted
                         fielding_team.team_fielddistribution(new_pitch, playtype, pitcher)
                         player_overcount = 0
 
                         #Current Pitcher is identitfied after redistriution
                         pitcher = extra.find_pitcher(fielding_team)
 
-                        #Wicket Keeper is extracted
+                        #Wicket Keeper is identified after redistribution as well
                         wicketkeeper =  extra.wicket_keeper(fielding_team)
 
                 #Batting teams final score is updated after the end of a half
                 batting_team.final_matchscore = batting_team_score
 
-                #After first half of the match end, update the batting teams score to their instance variable.
-
-                #At the end of first half of 120balls, the team roles are flipped by the umpire
+                #At the end of first half of 120balls or next down list exhaustion, the team roles are flipped by the umpire
                 referee.teamrole_flip(current_group)
                 for teams in current_group:
                     if teams.role == 'batting':
@@ -455,7 +478,7 @@ def main():
             st.write(f'{commentator}')
             time.sleep(2)
 
-            #Refreshes the values of the teams and the players in preparation for the next match
+            #Refreshes the values of the teams and the players in preparation for the next match in the next level
             for teams in current_group:
                 teams.value_refresh()
                 for i in teams.players.keys():
@@ -465,7 +488,7 @@ def main():
             winningteam = current_group[index]
             new_tournament.winninteam_update(winningteam, group_number)
 
-        #Forms the next group matches using the winning teams
+        #Forms the next group matches using only the winning teams
         tournament_status = new_tournament.update_groups()
         new_tournament.winning_teams = {}
 
